@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd">
+
+	<!--扫描包-->
+	<!--<context:component-scan base-package="com.rick.apps,com.rick.common,com.rick.generator" />-->
+	<context:component-scan base-package="com.rick" />
+	
+	<!-- 启动对@AspectJ注解的支持 --> 
+	<!-- proxy-target-class等于true是强制使用cglib代理，proxy-target-class默认是false，如果你的类实现了接口 就走JDK代理，如果没有，走cglib代理  -->
+    <!-- 注：对于单利模式建议使用cglib代理，虽然JDK动态代理比cglib代理速度快，但性能不如cglib -->
+	<aop:aspectj-autoproxy proxy-target-class="true"/>
+
+	<!--引入properties配置文件-->
+	<bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<value>classpath*:/*.properties</value>
+		</property>
+	</bean>
+
+	<!--引入配置文件-->
+	<!--<import resource="classpath*:spring/applicationContext_mail.xml"/>
+	<import resource="classpath*:spring/applicationContext_mq_consumer.xml"/>
+	<import resource="classpath*:spring/applicationContext_mq_producer.xml"/>-->
+	<import resource="classpath*:spring/applicationContext_mvc.xml"/>
+	<import resource="classpath*:spring/applicationContext_mybatis.xml"/>
+	<!--<import resource="classpath*:spring/applicationContext_redis.xml"/>-->
+
+
+	<!-- spring mvc验证开始 ，若不使用这种配置，需要将错误信息硬编码到代码里，不易修改-->
+	<!-- 默认的注解映射的支持 -->
+	<mvc:annotation-driven validator="validator">
+		<mvc:message-converters register-defaults="true">
+			<!-- 字符串解析器 -->
+			<bean class="org.springframework.http.converter.StringHttpMessageConverter" />
+			<!-- json解析器 -->
+			<bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+				<property name="supportedMediaTypes">
+					<list>
+						<value>text/html;charset=UTF-8</value>
+						<value>application/json;charset=UTF-8</value>
+					</list>
+				</property>
+				<property name="features">
+					<list>
+						<value>WriteMapNullValue</value>
+						<value>QuoteFieldNames</value>
+						<value>WriteDateUseDateFormat</value>
+						<value>WriteEnumUsingToString</value>
+						<value>WriteNullListAsEmpty</value>
+						<value>WriteNullStringAsEmpty</value>
+					</list>
+				</property>
+			</bean>
+		</mvc:message-converters>
+	</mvc:annotation-driven>
+
+	<!-- 定时任务 -->
+	<task:executor id="executor" pool-size="5"/>
+	<task:scheduler id="scheduler" pool-size="10"/>
+	<task:annotation-driven executor="executor"  scheduler="scheduler"/>
+
+	<!-- 日志管理  切面-->
+	<!--<bean id="systemLogAspect" class="com.rick.common.aspect.SystemLogAspect"></bean>-->
+	<!-- 全局异常处理 -->
+	<bean class="com.rick.common.interceptor.GlobalExceptionHandler" />
+	<!-- 参数校验 -->
+	<bean class="com.rick.common.interceptor.ParameterValidationInterceptor" />
+</beans>
+

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<!--视图解析器-->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix">
+			<value>/WEB-INF/views/</value>
+		</property>
+		<property name="suffix">
+			<value>.jsp</value>
+		</property>
+	</bean>
+
+	<!-- 配置文件上传，如果没有使用文件上传可以不用配置，当然如果不配，那么配置文件中也不必引入上传组件包 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<!-- 默认编码 -->
+		<property name="defaultEncoding" value="utf-8" />
+		<!-- 文件大小最大值 -->
+		<property name="maxUploadSize" value="10485760000" />
+		<!-- 内存中的最大值 -->
+		<property name="maxInMemorySize" value="40960" />
+	</bean>
+
+	<!-- 校验器 -->
+	<bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+	    <!-- hibernate校验器-->
+	    <property name="providerClass" value="org.hibernate.validator.HibernateValidator" />
+	    <!-- 指定校验使用的资源文件，在文件中配置校验错误信息，如果不指定则默认使用classpath下的ValidationMessages.properties -->
+	    <property name="validationMessageSource" ref="messageSource" />
+	</bean>
+	
+	<!-- 校验错误信息配置文件 -->
+	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+	    <!-- 资源文件名-->
+	    <property name="basenames">
+	        <list>
+	            <value>classpath:validationMessages</value>
+	        </list>
+	    </property>
+	    <!-- 资源文件编码格式 -->
+	    <property name="fileEncodings" value="utf-8" />
+	    <!-- 对资源文件内容缓存时间，单位秒 -->
+	    <property name="cacheSeconds" value="120" />
+	</bean>
+
+	<mvc:interceptors>
+		<!-- 允许跨域访问 -->
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<bean class="com.rick.common.interceptor.CrossDomainIntercepter"></bean>
+		</mvc:interceptor>
+		
+		<!-- 防止sql注入 -->
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<bean class="com.rick.common.interceptor.SqlInjectInterceptor"/>
+		</mvc:interceptor>
+	</mvc:interceptors>
+
+</beans>
+
